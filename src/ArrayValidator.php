@@ -15,36 +15,51 @@ class ArrayValidator {
     private $_missingStringTemplate = self::TEMPLATE_MISSING_KEY;
     private $_invalidValueFormatTemplate = self::TEMPLATE_INVALID_VALUE_FORMAT;
     private $_defaultConstraintType = self::TYPE_NAME;
-    //private $_mandatoryConstraintObjectProperties = array();
+    private $_constants;
     /**
      * Types
      */
-    const TYPE_NAME = StringValidator::TYPE_NAME;
-    const TYPE_EMAIL = StringValidator::TYPE_EMAIL;
+    const TYPE_NAME = SubjectValidator::TYPE_NAME;
+    const TYPE_EMAIL = SubjectValidator::TYPE_EMAIL;
+    const TYPE_NUMERIC = SubjectValidator::TYPE_NUMERIC;
+    const TYPE_INTEGER = SubjectValidator::TYPE_INTEGER;
 
     /**
      * Templates
      */
     const TEMPLATE_MISSING_KEY = "The key '{:key}' is mandatory";
-    const TEMPLATE_INVALID_VALUE_FORMAT = "The format of '{:key} does not meet the requirements.'";
+    const TEMPLATE_INVALID_VALUE_FORMAT = "The format of '{:key}' does not meet the requirements.";
 
     public function __construct(array $subjectArray, array $constraints) {
         $this->_constraints = $constraints;
         $this->_subjectArray = $subjectArray;
+        try {
+            $ref = new \ReflectionClass(__CLASS__);
+            $this->_constants = $ref->getConstants();
+        } catch (\ReflectionException $e) {
+            die("Could not get class constants");
+        }
     }
 
     /**
      * @throws InvalidConstraintTypeException
+     * @throws InvalidTemplateFormatException
      * @throws InvalidValueFormat
      * @throws MissingKeyException
      */
-    public function validate() {
+    public function validate () {
         $constraints = $this->_constraints;
         $subject = $this->_subjectArray;
 
         $keys = array_keys($constraints);
         foreach ($keys as $key) {
             $constraint = $constraints[$key];
+
+            if(!is_object($constraint)) {
+                $currentType = gettype($constraint);
+                throw new InvalidTemplateFormatException("The '$key' constraint must be of type object. $currentType given.");
+            }
+
             $keyDisplayName = property_exists($constraint, 'prettyName') ? $constraint->prettyName : $key;
 
             if (array_key_exists($key, $subject)) {
@@ -53,14 +68,14 @@ class ArrayValidator {
                     $constraint->type = $this->_defaultConstraintType;
                 }
 
-                if(!in_array($constraint->type, array(self::TYPE_EMAIL, self::TYPE_NAME))) {
+                if(!in_array($constraint->type, $this->getConstraintTypesConstants())) {
                     throw new InvalidConstraintTypeException("The constraint type of the key '$key' is unknown");
                 }
 
                 /**
                  * REQUIREMENT EXCEPTION
                  */
-                if(!StringValidator::validate($subject[$key], $constraint->type)) {
+                if(!SubjectValidator::validate($subject[$key], $constraint->type)) {
                     throw new InvalidValueFormat(str_replace('{:key}', $keyDisplayName, $this->_invalidValueFormatTemplate));
                 }
 
@@ -75,7 +90,7 @@ class ArrayValidator {
 
     /**
      * @param $templateType
-     * @param $template
+     * @param $template string
      * @throws InvalidTemplateFormatException
      * @throws UnknownTemplateTypeException
      */
@@ -109,10 +124,23 @@ class ArrayValidator {
      * @throws InvalidConstraintTypeException
      */
     public function setDefaultConstraintType ($type) {
-        if(in_array($type, array(self::TYPE_NAME, self::TYPE_EMAIL))) {
+        if(in_array($type, $this->getConstraintTypesConstants())) {
             $this->_defaultConstraintType = $type;
         } else {
             throw new InvalidConstraintTypeException("The constraint type '$type' is unknown");
         }
+    }
+
+    /**
+     * @return array containing the different types constants
+     */
+    private function getConstraintTypesConstants () {
+        $constants = $this->_constants;
+        foreach ($constants as $key => $val) {
+            if(!preg_match('/^TYPE_/', $key)) {
+                unset($constants[$key]);
+            }
+        }
+        return array_values($constants);
     }
 }
