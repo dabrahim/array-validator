@@ -1,8 +1,6 @@
 <?php
-namespace Dabrahim\ArrayValidator\Exceptions;
+namespace Dabrahim\ArrayValidator;
 
-
-use Dabrahim\ArrayValidator\ArrayValidator;
 
 class StringValidator {
     const TYPE_NAME = "Name TYPE";

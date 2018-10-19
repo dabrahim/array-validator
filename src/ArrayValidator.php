@@ -7,7 +7,6 @@ use Dabrahim\ArrayValidator\Exceptions\InvalidConstraintTypeException;
 use Dabrahim\ArrayValidator\Exceptions\InvalidTemplateFormatException;
 use Dabrahim\ArrayValidator\Exceptions\InvalidValueFormat;
 use Dabrahim\ArrayValidator\Exceptions\MissingKeyException;
-use Dabrahim\ArrayValidator\Exceptions\StringValidator;
 use Dabrahim\ArrayValidator\Exceptions\UnknownTemplateTypeException;
 
 class ArrayValidator {
