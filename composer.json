@@ -3,7 +3,7 @@
   "type": "library",
   "description": "Array validator for PHP. Commonly used to handle $_GET / $_POST arrays",
   "homepage": "https://github.com/dabrahim/array-validator",
-  "license": "GNU",
+  "license": "MIT",
   "authors": [
     {
       "name": "Ibrahima NDIAYE",
